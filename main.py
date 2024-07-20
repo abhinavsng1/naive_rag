@@ -15,25 +15,31 @@ if OPENAI_API_KEY is None:
 
 DOC_PATH = "transformer.pdf"
 
+# load the pdf 
 loader = PyPDFLoader(DOC_PATH)
 pages = loader.load()
 
+#convert it into chunks
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 chunks = text_splitter.split_documents(pages)
 
+#create an embedding
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
+#create an chroma database
 CHROMA_PATH = "your_chroma_path"
 db_chroma = Chroma.from_documents(chunks, embeddings, persist_directory=CHROMA_PATH)
 
-
+#enter the query
 query = 'What is Transformer?'
 
+#search the db and mention the k,where k mentions the top k matched result
 docs_chroma = db_chroma.similarity_search_with_score(query, k=5)
 
+#context texts  
 context_text = "\n\n".join([doc.page_content for doc, _score in docs_chroma])
 
-
+#prompt template
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
 {context}
